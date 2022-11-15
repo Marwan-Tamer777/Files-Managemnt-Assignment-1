@@ -49,23 +49,23 @@ Employee::Employee()
     strcpy(Dept_ID,emptyStr.c_str());
     strcpy(Employee_Name,emptyStr.c_str());
     strcpy(Employee_Position,emptyStr.c_str());
-}
+};
+
 Employee::Employee(string Id, string dept, string name, string pos)
 {
     strcpy(Employee_ID,Id.c_str());
     strcpy(Dept_ID,dept.c_str());
     strcpy(Employee_Name,name.c_str());
     strcpy(Employee_Position,pos.c_str());
-}
+};
 
 Employee::~Employee(){};
+
 
 void Employee::GetEmployeeByRRN(int RRN){
     //TODO: create a getEmployee by byteOffset to use indexes later.
     int currentRRN=1,currentRecordSize=-1;
-    //reach the required record sequntally
-    fEmployee.seekg(0,ios::beg);
-    fEmployee.seekp(0,ios::beg);
+    //reach the required record sequentially.
     fEmployee.seekg(FILE_HEADER_SIZE,ios::beg);
     while(currentRRN<RRN){
         if(fEmployee.eof()){cout<<"This RRN doesn't exist";return;}
@@ -75,6 +75,7 @@ void Employee::GetEmployeeByRRN(int RRN){
         currentRRN++;
     }
 
+    //get the record and place it in the object.
     char d;
     d = fEmployee.get();
     if(d==DELETE_FLAG){cout<<"Record is Deleted"<<endl;return;}
@@ -87,6 +88,8 @@ void Employee::GetEmployeeByRRN(int RRN){
 };
 
 void Employee::writeEmployee(){
+    //sets up the size of the record to be inserted in the file.
+    //and checks if AvailList have any deleted files
     RRN = -1;
     char c;
     int firstDeletedRecord = -1, nextDeletedRecordRNN = -1,deletedRecordSize=0;
@@ -95,19 +98,20 @@ void Employee::writeEmployee(){
     fEmployee.seekg(0,ios::beg);
     firstDeletedRecord = stoi(readBytes(fEmployee,4));
 
-    //Decide where to place new Record and any update to Avail List
+    //Decide where to place new Record and any needed update to Avail List
     if(firstDeletedRecord == -1) //Empty file or no deleted records.
     {
     	fEmployee.seekp(0, ios::end);
     }
-    else
-    {
+    else{
         //Reclaiming space procedures. check the available list and puts new record using first-fit technique.
         //TO DO: update to variable length navigation using index;
         int currentRRN = 1;
         int currentRecordSize;
         nextDeletedRecordRNN = firstDeletedRecord;
 
+        //this do while continue to traverse the file using the AvailList Header/RNN values
+        //until it reaches the end (nextRecordRNN is -1) or finds a deleted record that can fit the new record.
         do{
 
             currentRRN = 1;
@@ -129,10 +133,13 @@ void Employee::writeEmployee(){
             }
         } while(deletedRecordSize<recordSize);
 
+        //checks whether the current record the point is standing on would fit the new record or not.
         if(deletedRecordSize<recordSize){
                 cout<<"No suiting deleted Record, adding record at end of file."<<endl;
                 fEmployee.seekp(0, ios::end);
         } else{
+            //if yes then it will update the AvailHeader at the start of the file
+            //to use the Deleted record's next deleted record value.
             writeFileHeader(fEmployee,4,nextDeletedRecordRNN);
             currentRRN = 1;
             while(currentRRN<RRN){
@@ -145,7 +152,7 @@ void Employee::writeEmployee(){
 
     }
 
-    //actual writing in the file.
+    //actual writing in the file after deciding where to place the record.
     fEmployee.put(ACTIVE_FLAG);
     int physicalRecordSize = to_string(recordSize).length();
 
@@ -175,6 +182,7 @@ bool Employee::deleteEmployeeByRRN(int RRN){
         fEmployee.seekp(currentRecordSize,ios::cur);
         currentRRN++;
     }
+
     char c;
     c = fEmployee.get();
     fEmployee.seekp(-1,ios::cur);

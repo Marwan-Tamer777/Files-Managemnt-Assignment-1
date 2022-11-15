@@ -12,8 +12,8 @@ const char FIELD_DELIMITER = '|';
 const char ACTIVE_FLAG = ' ';
 const int EMPLOYEE_RECORD_SIZE = 144;
 const int DEPARTMENT_RECORD_SIZE = 130;
-const int FILE_HEADER_SIZE = sizeof(int);
-const int RECORD_HEADER_SIZE = sizeof(int)+1;
+const int FILE_HEADER_SIZE = sizeof(int);//each file starts with an Avail List Header.
+const int RECORD_HEADER_SIZE = sizeof(int)+1;//each record starts with a fixed length header consisting of Active/Delete flag and size header
 
 //File Structure Examples.
 
@@ -30,6 +30,13 @@ fstream fSIndexEmployee("sindexemployee.txt", ios::in | ios::out);
 fstream fPIndexDepartment("pindexdepartment.txt", ios::in | ios::out);
 fstream fSIndexDepartment("sindexdepartment.txt", ios::in | ios::out);
 
+//this function can be used to read any field from a file given they are delimiter seperated.
+//pass the file,char array and delimiter to it and it will places the read value in the char array.
+//example
+//file1: ahmed|Doctor|
+//file1.seekg(6,ios::begin);
+//char job[20];
+//readField(file1,job,'|');
 void readField(fstream &f,char *key,char delimeter){
     char temp = ' ';
     string value= "";
@@ -41,6 +48,13 @@ void readField(fstream &f,char *key,char delimeter){
     strcpy(key,value.c_str());
 }
 
+//this function is used to read a fixed size of bytes and returns the result as a string.
+//usually used to read Headers of file or records.
+//example
+//file1: ahmed|Doctor|  23Ali|
+//file1.seekg(13,ios::begin);
+//string s =readBytes(file1,4);
+//s will contain "  23";
 string readBytes(fstream &f,int byteCount){
     char temp = ' ';
     string value= "";
@@ -50,6 +64,7 @@ string readBytes(fstream &f,int byteCount){
     }
     return value;
 }
+
 /*
 void seekByRRN(fstream &f,int RRN){
     //TODO: create a method to navigate file by byteOffset using indexes later.
@@ -67,6 +82,10 @@ void seekByRRN(fstream &f,int RRN){
     }
 }*/
 
+//This function is used when you want to overWrite/Write a header for a whole file.
+//example:
+//file1 should have an avali list header of size 8 letters and value of 234.
+//so we can call writeFileHeader(file1,8,234);
 void writeFileHeader(fstream& f,int hSize,int header){
     f.seekp(0,ios::beg);
     int actualHeaderSize = to_string(header).length();
@@ -79,6 +98,7 @@ void writeFileHeader(fstream& f,int hSize,int header){
     f<<header;
 }
 
+//this function just checks if the files are empty to set up the Avail list header.
 void setHeaderIfNew(){
 
     fEmployee.seekp(0,ios::end);

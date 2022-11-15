@@ -75,6 +75,7 @@ void Department::GetDepartmentByRRN(int RRN){
         currentRRN++;
     }
 
+    //get the record and place it in the object.
     char d;
     d = fDepartment.get();
     if(d==DELETE_FLAG){cout<<"Record is Deleted"<<endl;return;}
@@ -86,6 +87,8 @@ void Department::GetDepartmentByRRN(int RRN){
 };
 
 void Department::writeDepartment(){
+    //sets up the size of the record to be inserted in the file.
+    //and checks if AvailList have any deleted files
     RRN = -1;
     char c;
     int firstDeletedRecord = -1, nextDeletedRecordRNN = -1,deletedRecordSize=0;
@@ -107,6 +110,8 @@ void Department::writeDepartment(){
         int currentRecordSize;
         nextDeletedRecordRNN = firstDeletedRecord;
 
+        //this do while continue to traverse the file using the AvailList Header/RNN values
+        //until it reaches the end (nextRecordRNN is -1) or finds a deleted record that can fit the new record.
         do{
 
             currentRRN = 1;
@@ -128,10 +133,13 @@ void Department::writeDepartment(){
             }
         } while(deletedRecordSize<recordSize);
 
+        //checks whether the current record the point is standing on would fit the new record or not.
         if(deletedRecordSize<recordSize){
                 cout<<"No suiting deleted Record, adding record at end of file."<<endl;
                 fDepartment.seekp(0, ios::end);
         } else{
+            //if yes then it will update the AvailHeader at the start of the file
+            //to use the Deleted record's next deleted record value.
             writeFileHeader(fDepartment,4,nextDeletedRecordRNN);
             currentRRN = 1;
             while(currentRRN<RRN){
@@ -144,7 +152,7 @@ void Department::writeDepartment(){
 
     }
 
-    //actual writing in the file.
+    //actual writing in the file  after deciding where to place the record.
     fDepartment.put(ACTIVE_FLAG);
     int physicalRecordSize = to_string(recordSize).length();
 
