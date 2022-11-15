@@ -65,7 +65,7 @@ string readBytes(fstream &f,int byteCount){
     return value;
 }
 
-/*
+/* TODO: possibly obsolete helping function once we add indexes.
 void seekByRRN(fstream &f,int RRN){
     //TODO: create a method to navigate file by byteOffset using indexes later.
     int currentRRN=1,currentRecordSize=-1;
