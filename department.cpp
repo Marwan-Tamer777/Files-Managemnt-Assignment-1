@@ -165,7 +165,10 @@ void Department::writeDepartment(){
     //basically internal fragmantion.
     //TODO: handle external fragmentation if needed.
     if(deletedRecordSize<recordSize){
+
             fDepartment<<recordSize;
+    }else {
+        fDepartment.seekp(to_string(recordSize).length(),ios::cur);
     }
 
     fDepartment<<Dept_ID<<FIELD_DELIMITER;

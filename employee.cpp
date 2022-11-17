@@ -164,7 +164,10 @@ void Employee::writeEmployee(){
     //basically internal fragmantion.
     //TODO: handle external fragmentation if needed.
     if(deletedRecordSize<recordSize){
+
             fEmployee<<recordSize;
+    } else {
+        fEmployee.seekp(to_string(recordSize).length(),ios::cur);
     }
     fEmployee<<Employee_ID<<FIELD_DELIMITER;
     fEmployee<<Dept_ID<<FIELD_DELIMITER;
