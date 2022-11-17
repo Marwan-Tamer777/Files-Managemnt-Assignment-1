@@ -160,7 +160,14 @@ void Department::writeDepartment(){
         fDepartment.put(' ');
         physicalRecordSize++;
     }
-    fDepartment<<recordSize;
+
+    //If i am replacing a deleted record, i will keep the old size to not mess up navigation,
+    //basically internal fragmantion.
+    //TODO: handle external fragmentation if needed.
+    if(deletedRecordSize<recordSize){
+            fDepartment<<recordSize;
+    }
+
     fDepartment<<Dept_ID<<FIELD_DELIMITER;
     fDepartment<<Dept_Name<<FIELD_DELIMITER;
     fDepartment<<Dept_Manger<<FIELD_DELIMITER;

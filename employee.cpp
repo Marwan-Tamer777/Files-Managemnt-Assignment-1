@@ -92,7 +92,7 @@ void Employee::writeEmployee(){
     //and checks if AvailList have any deleted files
     RRN = -1;
     char c;
-    int firstDeletedRecord = -1, nextDeletedRecordRNN = -1,deletedRecordSize=0;
+    int firstDeletedRecord = -1, nextDeletedRecordRNN = -1,deletedRecordSize=-1;
     int recordSize = string(Employee_ID).length()+string(Dept_ID).length()+
     string(Employee_Name).length()+string(Employee_Position).length() +4;
     fEmployee.seekg(0,ios::beg);
@@ -160,7 +160,12 @@ void Employee::writeEmployee(){
         fEmployee.put(' ');
         physicalRecordSize++;
     }
-    fEmployee<<recordSize;
+    //If i am replacing a deleted record, i will keep the old size to not mess up navigation,
+    //basically internal fragmantion.
+    //TODO: handle external fragmentation if needed.
+    if(deletedRecordSize<recordSize){
+            fEmployee<<recordSize;
+    }
     fEmployee<<Employee_ID<<FIELD_DELIMITER;
     fEmployee<<Dept_ID<<FIELD_DELIMITER;
     fEmployee<<Employee_Name<<FIELD_DELIMITER;
