@@ -165,8 +165,15 @@ void Department::writeDepartment(){
     //basically internal fragmantion.
     //TODO: handle external fragmentation if needed.
     if(deletedRecordSize<recordSize){
-
-            fDepartment<<recordSize;
+        //If this is a new file, then et new RRN by
+        //seeing how many records the primary index holds and adding 1
+        //then adding it to primary index list to get written in file later;
+        RRN = (getFileSize(fPIndexDepartment)/INDEX_RECOD_SIZE) + 1;
+        PrimaryIndexRecord pir;
+        pir.RRN = RRN;
+        pir.byteOffset = fDepartment.tellg();
+        pIndexDepartment.push_back(pir);
+        fDepartment<<recordSize;
     }else {
         fDepartment.seekp(to_string(recordSize).length(),ios::cur);
     }

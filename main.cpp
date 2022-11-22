@@ -22,6 +22,7 @@ using namespace std;
     9- Write a query 'q'
     10- Exit  'e'
 */
+
 int main()
 {
     char c;
@@ -35,9 +36,9 @@ int main()
         cout << "Couldn't open one or more files, check if they exist."<<endl;
         return 0;
     }
-    setHeaderIfNew();
+    initialise();
 
-
+    showvector(pIndexEmployee);
     do {
 
         cout<< "Choose the operation to perform (lower or uppercase):"<<endl;
@@ -100,20 +101,17 @@ int main()
             case 'i':
                 cout<<"Enter Query using the \"select\" attribute \"from\" Employee OR Department \"where\" key \"=\" 'value'"<<endl;
                 cin>>s;
-
                 break;
+
+            case 'j':
+                closeFiles();
+                cout<< "Closing the program"<<endl;
+                return 0;
             default:
                 break;
         }
 
-    } while (c!='j');
+    } while (true);
 
-    fEmployee.close();
-    fDepartment.close();
-    fPIndexEmployee.close();
-    fSIndexEmployee.close();
-    fPIndexDepartment.close();
-    fSIndexDepartment.close();
-    cout<< "Closing the program"<<endl;
-    return 0;
+
 }

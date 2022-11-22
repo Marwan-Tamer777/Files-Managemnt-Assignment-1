@@ -160,15 +160,24 @@ void Employee::writeEmployee(){
         fEmployee.put(' ');
         physicalRecordSize++;
     }
+
     //If i am replacing a deleted record, i will keep the old size to not mess up navigation,
     //basically internal fragmantion.
     //TODO: handle external fragmentation if needed.
     if(deletedRecordSize<recordSize){
-
-            fEmployee<<recordSize;
+        //If this is a new file, then et new RRN by
+        //seeing how many records the primary index holds and adding 1
+        //then adding it to primary index list to get written in file later;
+        RRN = (getFileSize(fPIndexEmployee)/INDEX_RECOD_SIZE) + 1;
+        PrimaryIndexRecord pir;
+        pir.RRN = RRN;
+        pir.byteOffset = fEmployee.tellg();
+        pIndexEmployee.push_back(pir);
+        fEmployee<<recordSize;
     } else {
         fEmployee.seekp(to_string(recordSize).length(),ios::cur);
     }
+
     fEmployee<<Employee_ID<<FIELD_DELIMITER;
     fEmployee<<Dept_ID<<FIELD_DELIMITER;
     fEmployee<<Employee_Name<<FIELD_DELIMITER;
