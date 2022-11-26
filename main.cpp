@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <cstring>
+#include <regex>
 #include "utils.cpp"
 #include "employee.cpp"
 #include "department.cpp"
@@ -38,7 +39,6 @@ int main()
     }
     initialise();
 
-    showvector(pIndexEmployee);
     do {
 
         cout<< "Choose the operation to perform (lower or uppercase):"<<endl;
@@ -100,7 +100,9 @@ int main()
                 break;
             case 'i':
                 cout<<"Enter Query using the \"select\" attribute \"from\" Employee OR Department \"where\" key \"=\" 'value'"<<endl;
-                cin>>s;
+                cin.ignore();
+                getline(cin,s);
+                regexMatch(s);
                 break;
 
             case 'j':

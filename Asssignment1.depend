@@ -1,15 +1,16 @@
 # depslib dependency file v1.0
-1669153197 source:g:\studies\files\asssignment1\main.cpp
+1669465518 source:g:\studies\files\asssignment1\main.cpp
 	<cstdlib>
 	<iostream>
 	<fstream>
 	<string>
 	<cstring>
+	<regex>
 	"utils.cpp"
 	"employee.cpp"
 	"department.cpp"
 
-1669155314 g:\studies\files\asssignment1\utils.cpp
+1669465657 g:\studies\files\asssignment1\utils.cpp
 	<cstdlib>
 	<iostream>
 	<fstream>

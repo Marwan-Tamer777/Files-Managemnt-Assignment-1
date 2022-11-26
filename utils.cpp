@@ -133,6 +133,19 @@ int getFileSize(fstream& f){
     return full;
 }
 
+void regexMatch(string s){
+    regex rgx(".*select (.*) from (.*) where (.*) = ['`’\"](.*)['`’\"].*");
+    smatch match;
+    string attribute,table,key,value;
+    if (regex_search(s, match, rgx)){
+        attribute = match[1];
+        table = match[2];
+        key = match[3];
+        value = match[4];
+        cout << "match: " << attribute<<" : "<<table<<" : "<<key<<" : "<<value << '\n';
+    }else {cout<< "No matches to your string"<<endl;return;}
+
+}
 //this function initialise data file and indexes arrays
 void initialise(){
 
