@@ -191,6 +191,24 @@ void Department::writeDepartment(){
         pir.RRN = RRN;
         pir.byteOffset = byteOffset;
         pIndexDepartment.push_back(pir);
+
+        //search existing secondary indexes if the key matches the new record, if not add a new secondary index.
+        int sizeT = sIndexDepartment.size();
+        int flag =0 ;
+        for(int i=0;i<sizeT;i++){
+            if(Dept_Name == sIndexDepartment[i].key){
+                sIndexDepartment[i].RRNs.push_back(RRN);
+                flag = 1;
+                break;
+            }
+        }
+        if(flag==0){
+            SecondaryIndexRecord sir;
+            sir.key= Dept_Name;
+            sir.RRNs.push_back(RRN);
+            sIndexDepartment.push_back(sir);
+        }
+
         fDepartment<<recordSize;
     }else {
         fDepartment.seekp(to_string(recordSize).length(),ios::cur);

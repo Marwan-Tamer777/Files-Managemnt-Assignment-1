@@ -184,14 +184,33 @@ void Employee::writeEmployee(){
     //basically internal fragmantion.
     //TODO: handle external fragmentation if needed.
     if(deletedRecordSize<recordSize){
-        //If this is a new file, then et new RRN by
+        //If this is a new file, then add new RRN by
         //seeing how many records the primary index holds and adding 1
         //then adding it to primary index list to get written in file later;
+        //and adding secondary index entry too.
         RRN = pIndexEmployee.size() + 1;
         PrimaryIndexRecord pir;
         pir.RRN = RRN;
         pir.byteOffset = byteOffset;
         pIndexEmployee.push_back(pir);
+
+        //search existing secondary indexes if the key matches the new record, if not add a new secondary index.
+        int sizeT = sIndexEmployee.size();
+        int flag =0;
+        for(int i=0;i<sizeT;i++){
+            if(Dept_ID == sIndexEmployee[i].key){
+                sIndexEmployee[i].RRNs.push_back(RRN);
+                flag = 1;
+                break;
+            }
+        }
+        if(flag==0){
+            SecondaryIndexRecord sir;
+            sir.key= Dept_ID;
+            sir.RRNs.push_back(RRN);
+            sIndexEmployee.push_back(sir);
+        }
+
         fEmployee<<recordSize;
     } else {
         fEmployee.seekp(to_string(recordSize).length(),ios::cur);

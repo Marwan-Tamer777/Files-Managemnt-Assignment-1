@@ -330,6 +330,8 @@ void closeFiles(){
         writeFixedField(fPIndexDepartment,P_INDEX_RECOD_SIZE/2,to_string(pIndexDepartment[i].byteOffset));
     }
 
+
+
     //sort the vector for secondary indexes using string compasring and the sort function above
     //and clears the datafile using trunc and write the sorted data into the 2 files.
     fSIndexEmployee.close();
@@ -338,41 +340,44 @@ void closeFiles(){
     fSIndexEmployeeData.open("sindexemployeelist.txt",ios::trunc | ios::out);
     sort(sIndexEmployee.begin(), sIndexEmployee.end(), &sIndexSorterAscending);
     x = sIndexEmployee.size();
-    for (int i=0;i<x; i++){
-        writeFixedField(fSIndexEmployee,S_INDEX_RECOD_SIZE/2,sIndexEmployee[x].key);
+    //cout<<"DATA: "<<x<< " : "<<sIndexEmployee[0].key<< " : " << sIndexEmployee[x].RRNs[0]
+    for (int i1=0;i1<x; i1++){
+        writeFixedField(fSIndexEmployee,S_INDEX_RECOD_SIZE/2,sIndexEmployee[i1].key);
         writeFixedField(fSIndexEmployee,S_INDEX_RECOD_SIZE/2,to_string(fSIndexEmployeeData.tellg()/SL_INDEX_RECOD_SIZE));
 
-        y = sIndexEmployee[x].RRNs.size();
-        for (int i=0;i<y; i++){
-            if(i==y){
+        y = sIndexEmployee[i1].RRNs.size();
+        for (int i2=0;i2<y; i2++){
+            if(i2==y){
                 writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(-1));
-                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexEmployee[x].RRNs[y]));
+                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexEmployee[i1].RRNs[i2]));
             }else{
                 writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(fSIndexEmployeeData.tellg()/SL_INDEX_RECOD_SIZE + 1));
-                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexEmployee[x].RRNs[y]));
+                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexEmployee[i1].RRNs[i2]));
             }
         }
 
     }
 
+
+
     fSIndexDepartment.close();
-    fSIndexDepartment.open("sindexeepartment.txt",ios::trunc | ios::out);
+    fSIndexDepartment.open("sindexdepartment.txt",ios::trunc | ios::out);
     fSIndexDepartmentData.close();
-    fSIndexDepartmentData.open("sindexepartmentlist.txt",ios::trunc | ios::out);
+    fSIndexDepartmentData.open("sindexdepartmentlist.txt",ios::trunc | ios::out);
     sort(sIndexDepartment.begin(), sIndexDepartment.end(), &sIndexSorterAscending);
     x = sIndexDepartment.size();
-    for (int i=0;i<x; i++){
-        writeFixedField(fSIndexDepartment,S_INDEX_RECOD_SIZE/2,sIndexDepartment[x].key);
+    for (int i1=0;i1<x; i1++){
+        writeFixedField(fSIndexDepartment,S_INDEX_RECOD_SIZE/2,sIndexDepartment[i1].key);
         writeFixedField(fSIndexDepartment,S_INDEX_RECOD_SIZE/2,to_string(fSIndexDepartmentData.tellg()/SL_INDEX_RECOD_SIZE));
 
-        y = sIndexDepartment[x].RRNs.size();
-        for (int i=0;i<y; i++){
-            if(i==y){
+        y = sIndexDepartment[i1].RRNs.size();
+        for (int i2=0;i2<y; i2++){
+            if(i2==y){
                 writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(-1));
-                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexDepartment[x].RRNs[y]));
+                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexDepartment[i1].RRNs[i2]));
             }else{
                 writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(fSIndexDepartmentData.tellg()/SL_INDEX_RECOD_SIZE + 1));
-                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexDepartment[x].RRNs[y]));
+                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexDepartment[i1].RRNs[i2]));
             }
         }
 
