@@ -347,7 +347,7 @@ void closeFiles(){
 
         y = sIndexEmployee[i1].RRNs.size();
         for (int i2=0;i2<y; i2++){
-            if(i2==y){
+            if(i2==y-1){
                 writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(-1));
                 writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexEmployee[i1].RRNs[i2]));
             }else{
@@ -372,7 +372,7 @@ void closeFiles(){
 
         y = sIndexDepartment[i1].RRNs.size();
         for (int i2=0;i2<y; i2++){
-            if(i2==y){
+            if(i2==y-1){
                 writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(-1));
                 writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexDepartment[i1].RRNs[i2]));
             }else{
