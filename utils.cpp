@@ -13,6 +13,11 @@ struct PrimaryIndexRecord {
   int byteOffset;
 };
 
+struct SecondaryIndexRecord {
+  string key;
+  vector<int> RRNs;
+};
+
 const char DELETE_FLAG = '*';
 const char HEADER_PADDING_FLAG = ' ';
 const char FIELD_DELIMITER = '|';
@@ -21,12 +26,15 @@ const int EMPLOYEE_RECORD_SIZE = 144;
 const int DEPARTMENT_RECORD_SIZE = 130;
 const int FILE_HEADER_SIZE = sizeof(int);//each file starts with an Avail vector Header.
 const int RECORD_HEADER_SIZE = sizeof(int)+1;//each record starts with a fixed length header consisting of Active/Delete flag and size header
-const int INDEX_RECOD_SIZE = 8;
+const int P_INDEX_RECOD_SIZE = 8;
+const int S_INDEX_RECOD_SIZE = 8;
+const int SL_INDEX_RECOD_SIZE = 8;
 
 //linked vector to store index records for sorting and binary searches.
 //they are read in the inititalise function, modified during data file change operation
 //and written back in file when use choose to close the program.
 vector<PrimaryIndexRecord> pIndexEmployee,pIndexDepartment;
+vector<SecondaryIndexRecord> sIndexEmployee,sIndexDepartment;
 
 
 //File Structure Examples.
@@ -35,14 +43,29 @@ vector<PrimaryIndexRecord> pIndexEmployee,pIndexDepartment;
 //if deleted the first field will be overwritten to the next RRN in the Avali vector + field deleimiter
 //applies to both employee and department files
 //   2   23123|213|Ahmed|Engineer|*  28-1||213|ALI|Engineer|
-fstream fEmployee("employee.txt", ios::in | ios::out);
-fstream fDepartment("depatment.txt", ios::in | ios::out);
 
 //Primary and Secondary index files for both employee and department.
+//PrimaryIndex Example(Fixed Records Size of 8 bytes:
+//   1   5   2  25   3  48   4  71   5  93
+
+//Secondary index is loosely binded to the primary index.
+//each record here points to the secondary index list file which
+//uses records of fixed sized that point to each other
+//SecondaryIndex Example:
+
+//SecondaryIndex list is a data file acting as linked list for secondary index.
+//its fixed size (8 bytes each records) and they point to each other.
+//SecondaryIndex list Example:
+
+fstream fEmployee("employee.txt", ios::in | ios::out);
+fstream fDepartment("depatment.txt", ios::in | ios::out);
 fstream fPIndexEmployee("pindexemployee.txt", ios::in | ios::out);
 fstream fSIndexEmployee("sindexemployee.txt", ios::in | ios::out);
+fstream fSIndexEmployeeData("sindexdepartmentlist.txt", ios::in | ios::out);
+
 fstream fPIndexDepartment("pindexdepartment.txt", ios::in | ios::out);
 fstream fSIndexDepartment("sindexdepartment.txt", ios::in | ios::out);
+fstream fSIndexDepartmentData("sindexdepartmentlist.txt", ios::in | ios::out);
 
 //this function can be used to read any field from a file given they are delimiter seperated.
 //pass the file,char array and delimiter to it and it will places the read value in the char array.
@@ -178,6 +201,7 @@ void initialise(){
     int temp1;
     int temp2;
 
+    //check if files are opened for the first time to add Avail List header.
     fEmployee.seekp(0,ios::end);
     int header = -1;
     if(fEmployee.tellp() <= 0)
@@ -191,6 +215,7 @@ void initialise(){
         writeFileHeader(fDepartment,FILE_HEADER_SIZE,header);
     }
 
+    //Read the primary index files into memory.
     fPIndexEmployee.seekg(0,ios::end);
     temp1 = fPIndexEmployee.tellg();
     fPIndexEmployee.seekg(0,ios::beg);
@@ -201,7 +226,7 @@ void initialise(){
             pir.RRN = stoi(readBytes(fPIndexEmployee,4));
             pir.byteOffset = stoi(readBytes(fPIndexEmployee,4));
             pIndexEmployee.push_back(pir);
-            temp2+= INDEX_RECOD_SIZE;
+            temp2 += P_INDEX_RECOD_SIZE;
         }
     }
 
@@ -215,43 +240,144 @@ void initialise(){
             pir.RRN = stoi(readBytes(fPIndexDepartment,4));
             pir.byteOffset = stoi(readBytes(fPIndexDepartment,4));
             pIndexDepartment.push_back(pir);
-            temp2+= INDEX_RECOD_SIZE;
+            temp2+= P_INDEX_RECOD_SIZE;
         }
     }
+
+    //Read Secondary Index and Secondary Index list into memory.
+    fSIndexEmployee.seekg(0,ios::end);
+    temp1 = fSIndexEmployee.tellg();
+    fSIndexEmployee.seekg(0,ios::beg);
+    fSIndexEmployeeData.seekg(0,ios::beg);
+
+    if(temp1 != 0){
+        temp2 =0;
+        while(temp2!=temp1){
+            SecondaryIndexRecord sir;
+            sir.key = readBytes(fSIndexEmployee,4);
+            int listElem  = stoi(readBytes(fSIndexEmployee,4));
+            while(listElem!= -1){
+                fSIndexEmployeeData.seekg(listElem*SL_INDEX_RECOD_SIZE,ios::beg);
+                listElem = stoi(readBytes(fSIndexEmployeeData,4));
+                sir.RRNs.push_back(stoi(readBytes(fSIndexEmployeeData,4)));
+            };
+            sIndexEmployee.push_back(sir);
+            temp2+= S_INDEX_RECOD_SIZE;
+        }
+    };
+
+    fSIndexDepartment.seekg(0,ios::end);
+    temp1 = fSIndexDepartment.tellg();
+    fSIndexDepartment.seekg(0,ios::beg);
+    fSIndexDepartmentData.seekg(0,ios::beg);
+    if(temp1 != 0){
+        temp2 =0;
+            while(temp2!=temp1){
+            SecondaryIndexRecord sir;
+            sir.key = readBytes(fSIndexDepartment,4);
+            int listElem  = stoi(readBytes(fSIndexDepartment,4));
+            while(listElem!= -1){
+                fSIndexDepartmentData.seekg(listElem*SL_INDEX_RECOD_SIZE,ios::beg);
+                listElem = stoi(readBytes(fSIndexDepartmentData,4));
+                sir.RRNs.push_back(stoi(readBytes(fSIndexDepartmentData,4)));
+            };
+            sIndexDepartment.push_back(sir);
+            temp2+= S_INDEX_RECOD_SIZE;
+        }
+    };
 
 };
 
 
-//Parameter function to sort the indexes vector.
-bool indexSorterAscending(PrimaryIndexRecord const& lpir, PrimaryIndexRecord const& rpir) {
+//Parameter function to sort the Primary indexes vector.
+bool pIndexSorterAscending(PrimaryIndexRecord const& lpir, PrimaryIndexRecord const& rpir) {
     return lpir.byteOffset < rpir.byteOffset;
+};
+
+//Parameter function to sort the Secondary indexes vector.
+bool sIndexSorterAscending(SecondaryIndexRecord const& lsir, SecondaryIndexRecord const& rsir) {
+    int compare = rsir.key.compare(lsir.key);
+    if(compare>0){
+        return true;
+    } else {
+        return false;
+    }
 };
 
 //this functions closes the files, sorts the indexes and
 // write them into files.
 void closeFiles(){
-    int x;
+    int x,y;
 
-    //sort the vector for primary employee indexes using byteoffset/ and the sort function above
-    //and clears the datafile using trunc and write the sorted data into the file
+    //sort the vector for primary indexes using byteoffset/ and the sort function above
+    //and clears the datafile using trunc and write the sorted data into the file.
     fPIndexEmployee.close();
     fPIndexEmployee.open("pindexemployee.txt",ios::trunc | ios::out);
-    sort(pIndexEmployee.begin(), pIndexEmployee.end(), &indexSorterAscending);
-    fPIndexEmployee.clear();
+    sort(pIndexEmployee.begin(), pIndexEmployee.end(), &pIndexSorterAscending);
+    //fPIndexEmployee.clear();
     x = pIndexEmployee.size();
     for (int i=0;i<x; i++){
-        writeFixedField(fPIndexEmployee,INDEX_RECOD_SIZE/2,to_string(pIndexEmployee[i].RRN));
-        writeFixedField(fPIndexEmployee,INDEX_RECOD_SIZE/2,to_string(pIndexEmployee[i].byteOffset));
+        writeFixedField(fPIndexEmployee,P_INDEX_RECOD_SIZE/2,to_string(pIndexEmployee[i].RRN));
+        writeFixedField(fPIndexEmployee,P_INDEX_RECOD_SIZE/2,to_string(pIndexEmployee[i].byteOffset));
     }
 
     fPIndexDepartment.close();
     fPIndexDepartment.open("pindexdepartment.txt",ios::trunc | ios::out);
-    fPIndexDepartment.clear();
+    sort(pIndexDepartment.begin(), pIndexDepartment.end(), &pIndexSorterAscending);
     x = pIndexDepartment.size();
     for (int i=0;i<x; i++){
-        writeFixedField(fPIndexDepartment,INDEX_RECOD_SIZE/2,to_string(pIndexDepartment[i].RRN));
-        writeFixedField(fPIndexDepartment,INDEX_RECOD_SIZE/2,to_string(pIndexDepartment[i].byteOffset));
+        writeFixedField(fPIndexDepartment,P_INDEX_RECOD_SIZE/2,to_string(pIndexDepartment[i].RRN));
+        writeFixedField(fPIndexDepartment,P_INDEX_RECOD_SIZE/2,to_string(pIndexDepartment[i].byteOffset));
     }
+
+    //sort the vector for secondary indexes using string compasring and the sort function above
+    //and clears the datafile using trunc and write the sorted data into the 2 files.
+    fSIndexEmployee.close();
+    fSIndexEmployee.open("sindexemployee.txt",ios::trunc | ios::out);
+    fSIndexEmployeeData.close();
+    fSIndexEmployeeData.open("sindexemployeelist.txt",ios::trunc | ios::out);
+    sort(sIndexEmployee.begin(), sIndexEmployee.end(), &sIndexSorterAscending);
+    x = sIndexEmployee.size();
+    for (int i=0;i<x; i++){
+        writeFixedField(fSIndexEmployee,S_INDEX_RECOD_SIZE/2,sIndexEmployee[x].key);
+        writeFixedField(fSIndexEmployee,S_INDEX_RECOD_SIZE/2,to_string(fSIndexEmployeeData.tellg()/SL_INDEX_RECOD_SIZE));
+
+        y = sIndexEmployee[x].RRNs.size();
+        for (int i=0;i<y; i++){
+            if(i==y){
+                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(-1));
+                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexEmployee[x].RRNs[y]));
+            }else{
+                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(fSIndexEmployeeData.tellg()/SL_INDEX_RECOD_SIZE + 1));
+                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexEmployee[x].RRNs[y]));
+            }
+        }
+
+    }
+
+    fSIndexDepartment.close();
+    fSIndexDepartment.open("sindexeepartment.txt",ios::trunc | ios::out);
+    fSIndexDepartmentData.close();
+    fSIndexDepartmentData.open("sindexepartmentlist.txt",ios::trunc | ios::out);
+    sort(sIndexDepartment.begin(), sIndexDepartment.end(), &sIndexSorterAscending);
+    x = sIndexDepartment.size();
+    for (int i=0;i<x; i++){
+        writeFixedField(fSIndexDepartment,S_INDEX_RECOD_SIZE/2,sIndexDepartment[x].key);
+        writeFixedField(fSIndexDepartment,S_INDEX_RECOD_SIZE/2,to_string(fSIndexDepartmentData.tellg()/SL_INDEX_RECOD_SIZE));
+
+        y = sIndexDepartment[x].RRNs.size();
+        for (int i=0;i<y; i++){
+            if(i==y){
+                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(-1));
+                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexDepartment[x].RRNs[y]));
+            }else{
+                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(fSIndexDepartmentData.tellg()/SL_INDEX_RECOD_SIZE + 1));
+                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexDepartment[x].RRNs[y]));
+            }
+        }
+
+    }
+
 
     fEmployee.close();
     fDepartment.close();

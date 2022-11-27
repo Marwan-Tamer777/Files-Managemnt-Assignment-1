@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1669571760 source:g:\studies\files\asssignment1\main.cpp
+1669572602 source:g:\studies\files\asssignment1\main.cpp
 	<cstdlib>
 	<iostream>
 	<fstream>
@@ -10,7 +10,7 @@
 	"employee.cpp"
 	"department.cpp"
 
-1669571562 g:\studies\files\asssignment1\utils.cpp
+1669577505 g:\studies\files\asssignment1\utils.cpp
 	<cstdlib>
 	<iostream>
 	<fstream>
