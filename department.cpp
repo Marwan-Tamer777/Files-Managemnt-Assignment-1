@@ -20,7 +20,8 @@ public:
     Department( string , string , string);
     void setRRN(int);
     static bool deleteDepartmentByRRN(int);
-    void GetDepartmentByRRN(int);
+    void getDepartmentByRRN(int);
+    void getDepartmentByPIndex(int);
     void readDepartment();
     void writeDepartment();
     friend istream& operator >> (istream &str, Department &d){
@@ -60,7 +61,7 @@ Department::Department(string Id, string name, string manger)
 
 Department::~Department(){};
 
-void Department::GetDepartmentByRRN(int RRN){
+void Department::getDepartmentByRRN(int RRN){
     //TODO: create a getDepartment by byteOffset to use indexes later.
     int currentRRN=1,currentRecordSize=-1;
     //reach the required record sequentially
@@ -84,6 +85,22 @@ void Department::GetDepartmentByRRN(int RRN){
     readField(fDepartment,Dept_Name,FIELD_DELIMITER);
     readField(fDepartment,Dept_Manger,FIELD_DELIMITER);
 
+};
+
+void Department::getDepartmentByPIndex(int RRN){
+
+    int pos = binarySearch(pIndexDepartment,RRN);
+    //reach the required record using the byte offset.
+    fDepartment.seekg(pos,ios::beg);
+
+    //get the record and place it in the object.
+    char d;
+    d = fDepartment.get();
+    if(d==DELETE_FLAG){cout<<"Record is Deleted"<<endl;return;}
+    fDepartment.seekg(RECORD_HEADER_SIZE-1,ios::cur);
+    readField(fDepartment,Dept_ID,FIELD_DELIMITER);
+    readField(fDepartment,Dept_Name,FIELD_DELIMITER);
+    readField(fDepartment,Dept_Manger,FIELD_DELIMITER);
 };
 
 void Department::writeDepartment(){
@@ -153,6 +170,7 @@ void Department::writeDepartment(){
     }
 
     //actual writing in the file  after deciding where to place the record.
+    int byteOffset = fDepartment.tellg();
     fDepartment.put(ACTIVE_FLAG);
     int physicalRecordSize = to_string(recordSize).length();
 
@@ -168,10 +186,10 @@ void Department::writeDepartment(){
         //If this is a new file, then et new RRN by
         //seeing how many records the primary index holds and adding 1
         //then adding it to primary index list to get written in file later;
-        RRN = (getFileSize(fPIndexDepartment)/INDEX_RECOD_SIZE) + 1;
+        RRN = pIndexDepartment.size()+ 1;
         PrimaryIndexRecord pir;
         pir.RRN = RRN;
-        pir.byteOffset = fDepartment.tellg();
+        pir.byteOffset = byteOffset;
         pIndexDepartment.push_back(pir);
         fDepartment<<recordSize;
     }else {

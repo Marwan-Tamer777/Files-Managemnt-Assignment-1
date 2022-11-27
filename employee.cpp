@@ -21,7 +21,8 @@ public:
     Employee( string , string , string, string );
     void setRRN(int);
     static bool deleteEmployeeByRRN(int);
-    void GetEmployeeByRRN(int);
+    void getEmployeeByRRN(int);
+    void getEmployeeByPIndex(int);
     void writeEmployee();
     friend istream& operator >> (istream &str,Employee &e){
         cout<<"Enter Employee's ID, Department ID, Name, Position separated  by \"enter\""<<endl;
@@ -62,8 +63,7 @@ Employee::Employee(string Id, string dept, string name, string pos)
 Employee::~Employee(){};
 
 
-void Employee::GetEmployeeByRRN(int RRN){
-    //TODO: create a getEmployee by byteOffset to use indexes later.
+void Employee::getEmployeeByRRN(int RRN){
     int currentRRN=1,currentRecordSize=-1;
     //reach the required record sequentially.
     fEmployee.seekg(FILE_HEADER_SIZE,ios::beg);
@@ -85,6 +85,24 @@ void Employee::GetEmployeeByRRN(int RRN){
     readField(fEmployee,Employee_Name,FIELD_DELIMITER);
     readField(fEmployee,Employee_Position,FIELD_DELIMITER);
 
+};
+
+void Employee::getEmployeeByPIndex(int RRN){
+
+    int pos = binarySearch(pIndexEmployee,RRN);
+    //reach the required record using the byte offset.
+    fEmployee.seekg(pos,ios::beg);
+
+
+    //get the record and place it in the object.
+    char d;
+    d = fEmployee.get();
+    if(d==DELETE_FLAG){cout<<"Record is Deleted"<<endl;return;}
+    fEmployee.seekg(RECORD_HEADER_SIZE-1,ios::cur);
+    readField(fEmployee,Employee_ID,FIELD_DELIMITER);
+    readField(fEmployee,Dept_ID,FIELD_DELIMITER);
+    readField(fEmployee,Employee_Name,FIELD_DELIMITER);
+    readField(fEmployee,Employee_Position,FIELD_DELIMITER);
 };
 
 void Employee::writeEmployee(){
@@ -153,6 +171,7 @@ void Employee::writeEmployee(){
     }
 
     //actual writing in the file after deciding where to place the record.
+    int byteOffset = fEmployee.tellg();
     fEmployee.put(ACTIVE_FLAG);
     int physicalRecordSize = to_string(recordSize).length();
 
@@ -168,10 +187,10 @@ void Employee::writeEmployee(){
         //If this is a new file, then et new RRN by
         //seeing how many records the primary index holds and adding 1
         //then adding it to primary index list to get written in file later;
-        RRN = (getFileSize(fPIndexEmployee)/INDEX_RECOD_SIZE) + 1;
+        RRN = pIndexEmployee.size() + 1;
         PrimaryIndexRecord pir;
         pir.RRN = RRN;
-        pir.byteOffset = fEmployee.tellg();
+        pir.byteOffset = byteOffset;
         pIndexEmployee.push_back(pir);
         fEmployee<<recordSize;
     } else {

@@ -146,6 +146,32 @@ void regexMatch(string s){
     }else {cout<< "No matches to your string"<<endl;return;}
 
 }
+
+//Binary search for primary indexes that returns byteoffSet.
+int binarySearch(vector<PrimaryIndexRecord> v, int RRN)
+{
+    int size = v.size();
+    int first = 0;
+    int last = size - 1;
+    int middle;
+    int position = -1;
+    bool found = false;
+
+    while (found == false && first <= last)
+    {
+        middle = (first + last) / 2;
+        if (v[middle].RRN == RRN)     {
+            found = true;
+            position = v[middle].byteOffset;
+        } else if (v[middle].RRN > RRN){
+            last = middle - 1;
+        } else{
+            first = middle + 1;
+        }
+    }
+    return position;
+}
+
 //this function initialise data file and indexes arrays
 void initialise(){
 

@@ -77,25 +77,25 @@ int main()
             case 'e':
                 cout<<"Enter Employee ID to print the employee"<<endl;
                 cin>>s;
-                e.GetEmployeeByRRN(stoi(s));
+                e.getEmployeeByPIndex(stoi(s));
                 cout<<e;
                 break;
             case 'f':
                 cout<<"Enter Department ID to print the Employee"<<endl;
                 cin>>s;
-                e.GetEmployeeByRRN(stoi(s));
+                e.getEmployeeByRRN(stoi(s));
                 cout<<e;
                 break;
             case 'g':
                 cout<<"Enter Department ID to print the Department"<<endl;
                 cin>>s;
-                d.GetDepartmentByRRN(stoi(s));
+                d.getDepartmentByPIndex(stoi(s));
                 cout<<d;
                 break;
             case 'h':
                 cout<<"Enter Department Name to print the Department"<<endl;
                 cin>>s;
-                d.GetDepartmentByRRN(stoi(s));
+                d.getDepartmentByRRN(stoi(s));
                 cout<<d;
                 break;
             case 'i':
