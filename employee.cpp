@@ -258,7 +258,9 @@ void Employee::writeEmployee(){
 
 bool Employee::deleteEmployeeByRRN(int RRN){
     //TODO: create a getEmployee by byteOffset to use indexes later.
-    int currentRRN=1,currentRecordSize=-1;
+    Employee e;
+    e.getEmployeeByRRN(RRN);
+    int currentRRN=1,currentRecordSize=-1,x;
     fEmployee.seekg(0,ios::beg);
     int firstDeletedRecord = stoi(readBytes(fEmployee,4));
 
@@ -270,7 +272,6 @@ bool Employee::deleteEmployeeByRRN(int RRN){
         fEmployee.seekp(currentRecordSize,ios::cur);
         currentRRN++;
     }
-
     char c;
     c = fEmployee.get();
     fEmployee.seekp(-1,ios::cur);
@@ -278,10 +279,42 @@ bool Employee::deleteEmployeeByRRN(int RRN){
     //if file wasn't already deleted,we will put the delete flag and the header's RRN
     //then move back to the header to update its RRN to the newly deleted Record.
 
+    //Adds the delete flag into the data file record.
     fEmployee<<DELETE_FLAG;
     fEmployee.seekp(RECORD_HEADER_SIZE-1,ios::cur);
     fEmployee<<firstDeletedRecord<<FIELD_DELIMITER;
     fEmployee.seekp(0,ios::beg);
     writeFileHeader(fEmployee,4,RRN);
+
+    //Delete the record from the Primary index.
+    x = pIndexEmployee.size();
+
+    for(int i=0;i<x;i++){
+        if(pIndexEmployee[i].RRN == RRN){
+            pIndexEmployee.erase(pIndexEmployee.begin()+i);
+            break;
+        }
+    }
+
+    //Delete the record from the secondary index by removing it from The vectors.
+    x = sIndexEmployee.size();
+
+    for(int i1=0;i1<x;i1++){
+        if(sIndexEmployee[i1].key == e.Dept_ID){
+            int y = sIndexEmployee[i1].RRNs.size();
+            if(y==1){
+                sIndexEmployee.erase(sIndexEmployee.begin()+i1);
+            } else {
+                for(int i2=0;i2<y;i2++){
+                    if(sIndexEmployee[i1].RRNs[i2] == RRN){
+                        sIndexEmployee[i1].RRNs.erase(sIndexEmployee[i1].RRNs.begin()+i2);
+                        break;
+                    }
+                }
+            }
+            break;
+        }
+    }
+
     return true;
 };

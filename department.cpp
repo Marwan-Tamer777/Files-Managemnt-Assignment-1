@@ -255,7 +255,9 @@ void Department::writeDepartment(){
 
 bool Department::deleteDepartmentByRRN(int RRN){
     //TODO: create a getDepartment by byteOffset to use indexes later.
-    int currentRRN=1,currentRecordSize=-1;
+    Department d;
+    d.getDepartmentByRRN(RRN);
+    int currentRRN=1,currentRecordSize=-1,x;
     fDepartment.seekg(0,ios::beg);
     int firstDeletedRecord = stoi(readBytes(fDepartment,4));
 
@@ -279,6 +281,36 @@ bool Department::deleteDepartmentByRRN(int RRN){
     fDepartment<<firstDeletedRecord<<FIELD_DELIMITER;
     fDepartment.seekp(0,ios::beg);
     writeFileHeader(fDepartment,4,RRN);
+
+    //Delete the record from the Primary index.
+    x = pIndexDepartment.size();
+
+    for(int i=0;i<x;i++){
+        if(pIndexDepartment[i].RRN == RRN){
+            pIndexDepartment.erase(pIndexDepartment.begin()+i);
+            break;
+        }
+    }
+
+    //Delete the record from the secondary index by removing it from The vectors.
+    x = sIndexDepartment.size();
+
+    for(int i1=0;i1<x;i1++){
+        if(sIndexDepartment[i1].key == d.Dept_Name){
+            int y = sIndexDepartment[i1].RRNs.size();
+            if(y==1){
+                sIndexDepartment.erase(sIndexDepartment.begin()+i1);
+            } else {
+                for(int i2=0;i2<y;i2++){
+                    if(sIndexDepartment[i1].RRNs[i2] == RRN){
+                        sIndexDepartment[i1].RRNs.erase(sIndexDepartment[i1].RRNs.begin()+i2);
+                        break;
+                    }
+                }
+            }
+            break;
+        }
+    }
     return true;
 };
 
