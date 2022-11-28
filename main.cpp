@@ -83,8 +83,7 @@ int main()
             case 'f':
                 cout<<"Enter Department ID to print the Employee"<<endl;
                 cin>>s;
-                e.getEmployeeByRRN(stoi(s));
-                cout<<e;
+                Employee::getEmployeesBySIndex(s);
                 break;
             case 'g':
                 cout<<"Enter Department ID to print the Department"<<endl;
@@ -95,8 +94,7 @@ int main()
             case 'h':
                 cout<<"Enter Department Name to print the Department"<<endl;
                 cin>>s;
-                d.getDepartmentByRRN(stoi(s));
-                cout<<d;
+                Department::getDepartmentsBySIndex(s);
                 break;
             case 'i':
                 cout<<"Enter Query using the \"select\" attribute \"from\" Employee OR Department \"where\" key \"=\" 'value'"<<endl;

@@ -61,7 +61,7 @@ fstream fEmployee("employee.txt", ios::in | ios::out);
 fstream fDepartment("depatment.txt", ios::in | ios::out);
 fstream fPIndexEmployee("pindexemployee.txt", ios::in | ios::out);
 fstream fSIndexEmployee("sindexemployee.txt", ios::in | ios::out);
-fstream fSIndexEmployeeData("sindexdepartmentlist.txt", ios::in | ios::out);
+fstream fSIndexEmployeeData("sindexemployeelist.txt", ios::in | ios::out);
 
 fstream fPIndexDepartment("pindexdepartment.txt", ios::in | ios::out);
 fstream fSIndexDepartment("sindexdepartment.txt", ios::in | ios::out);
@@ -83,6 +83,18 @@ void readField(fstream &f,char *key,char delimeter){
         temp = f.get();
     }
     strcpy(key,value.c_str());
+}
+
+//overwritten function for testing
+string readField(fstream &f,char delimeter){
+    char temp = ' ';
+    string value= "";
+    temp = f.get();
+    while(temp!=delimeter){
+        value.push_back(temp);
+        temp = f.get();
+    }
+    return value;
 }
 
 //this function is used to read a fixed size of bytes and returns the result as a string.
@@ -195,6 +207,31 @@ int binarySearch(vector<PrimaryIndexRecord> v, int RRN)
     return position;
 }
 
+//Binary search for secondary indexes that returns RRNs.
+vector<int> binarySearch(vector<SecondaryIndexRecord> v, string key)
+{
+    int size = v.size();
+    int first = 0;
+    int last = size - 1;
+    int middle;
+    vector<int> rrns;
+    bool found = false;
+
+    while (found == false && first <= last)
+    {
+        middle = (first + last) / 2;
+        if (v[middle].key == key)     {
+            found = true;
+            rrns = v[middle].RRNs;
+        } else if (v[middle].key > key){
+            last = middle - 1;
+        } else{
+            first = middle + 1;
+        }
+    }
+    return rrns;
+}
+
 //this function initialise data file and indexes arrays
 void initialise(){
 
@@ -244,6 +281,7 @@ void initialise(){
         }
     }
 
+
     //Read Secondary Index and Secondary Index list into memory.
     fSIndexEmployee.seekg(0,ios::end);
     temp1 = fSIndexEmployee.tellg();
@@ -255,6 +293,8 @@ void initialise(){
         while(temp2!=temp1){
             SecondaryIndexRecord sir;
             sir.key = readBytes(fSIndexEmployee,4);
+            //Removes white space from the key if the datafile used padding/Fixed Length Record.
+            sir.key.erase(remove(sir.key.begin(), sir.key.end(), ' '), sir.key.end());
             int listElem  = stoi(readBytes(fSIndexEmployee,4));
             while(listElem!= -1){
                 fSIndexEmployeeData.seekg(listElem*SL_INDEX_RECOD_SIZE,ios::beg);
@@ -274,7 +314,8 @@ void initialise(){
         temp2 =0;
             while(temp2!=temp1){
             SecondaryIndexRecord sir;
-            sir.key = readBytes(fSIndexDepartment,4);
+            sir.key = readBytes(fSIndexEmployee,4);
+            sir.key.erase(remove(sir.key.begin(), sir.key.end(), ' '), sir.key.end());
             int listElem  = stoi(readBytes(fSIndexDepartment,4));
             while(listElem!= -1){
                 fSIndexDepartmentData.seekg(listElem*SL_INDEX_RECOD_SIZE,ios::beg);
@@ -340,7 +381,6 @@ void closeFiles(){
     fSIndexEmployeeData.open("sindexemployeelist.txt",ios::trunc | ios::out);
     sort(sIndexEmployee.begin(), sIndexEmployee.end(), &sIndexSorterAscending);
     x = sIndexEmployee.size();
-    //cout<<"DATA: "<<x<< " : "<<sIndexEmployee[0].key<< " : " << sIndexEmployee[x].RRNs[0]
     for (int i1=0;i1<x; i1++){
         writeFixedField(fSIndexEmployee,S_INDEX_RECOD_SIZE/2,sIndexEmployee[i1].key);
         writeFixedField(fSIndexEmployee,S_INDEX_RECOD_SIZE/2,to_string(fSIndexEmployeeData.tellg()/SL_INDEX_RECOD_SIZE));

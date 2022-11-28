@@ -22,6 +22,7 @@ public:
     static bool deleteDepartmentByRRN(int);
     void getDepartmentByRRN(int);
     void getDepartmentByPIndex(int);
+    static void getDepartmentsBySIndex(string);
     void readDepartment();
     void writeDepartment();
     friend istream& operator >> (istream &str, Department &d){
@@ -101,6 +102,38 @@ void Department::getDepartmentByPIndex(int RRN){
     readField(fDepartment,Dept_ID,FIELD_DELIMITER);
     readField(fDepartment,Dept_Name,FIELD_DELIMITER);
     readField(fDepartment,Dept_Manger,FIELD_DELIMITER);
+};
+
+//Outputs all employees that meet the search key.
+//It does not store any of them in an Employee object and simply prints them.
+void Department::getDepartmentsBySIndex(string key){
+
+    vector<int> rrns = binarySearch(sIndexDepartment,key);
+    int pos;
+    int size = rrns.size();
+    string temp;
+    char d;
+
+    //reach the required record using the byte offset from the primary index.
+    for(int i=0;i<size;i++){
+        pos = binarySearch(pIndexDepartment,rrns[i]);
+        fDepartment.seekg(pos,ios::beg);
+
+        //Couts the data.
+        d = fDepartment.get();
+        if(d==DELETE_FLAG){cout<<"Record is Deleted"<<endl;return;}
+        fDepartment.seekg(RECORD_HEADER_SIZE-1,ios::cur);
+
+        temp = readField(fDepartment,FIELD_DELIMITER);
+        cout<<"Employee ID: "<<temp<<endl;
+        temp = readField(fDepartment,FIELD_DELIMITER);
+        cout<<"Dept ID: "<<temp<<endl;
+        temp = readField(fDepartment,FIELD_DELIMITER);
+        cout<<"Employee Name: "<<temp<<endl;
+        temp = readField(fDepartment,FIELD_DELIMITER);
+        cout<<"Employee Position: "<<temp<<endl;
+    }
+
 };
 
 void Department::writeDepartment(){
