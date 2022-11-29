@@ -67,12 +67,12 @@ int main()
             case 'c':
                 cout<<"Enter Employee ID to be deleted"<<endl;
                 cin>>s;
-                Employee::deleteEmployeeByRRN(stoi(s));
+                Employee::deleteEmployeeByID(stoi(s));
                 break;
             case 'd':
                 cout<<"Enter Department ID to be deleted"<<endl;
                 cin>>s;
-                Department::deleteDepartmentByRRN(stoi(s));
+                Department::deleteDepartmentByID(stoi(s));
                 break;
             case 'e':
                 cout<<"Enter Employee ID to print the employee"<<endl;

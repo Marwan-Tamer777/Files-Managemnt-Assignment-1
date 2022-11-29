@@ -154,15 +154,13 @@ void writeFixedField(fstream& f,int fSize,string s){
     int actualSize = s.length();
     int diff = fSize-actualSize;
     int writtenChars = 0;
-    //cout<<"DATA: "<<s<<endl;
 
     for(int i=diff;i>0;i--){
         f.put(' ');
         writtenChars++;
     }
-    for(int i=0;writtenChars!=fSize;i++){
+    for(int i=0;writtenChars!=fSize;i++,writtenChars++){
         f.put(s[i]);
-        writtenChars++;
     }
 
 

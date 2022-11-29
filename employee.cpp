@@ -20,7 +20,7 @@ public:
     Employee();
     Employee( string , string , string, string );
     void setRRN(int);
-    static bool deleteEmployeeByRRN(int);
+    static bool deleteEmployeeByID(int);
     void getEmployeeByRRN(int);
     void getEmployeeByPIndex(int);
     static void getEmployeesBySIndex(string);
@@ -218,35 +218,37 @@ void Employee::writeEmployee(){
     //TODO: handle external fragmentation if needed.
     if(deletedRecordSize<recordSize){
         //If this is a new file, then add new RRN by
-        //seeing how many records the primary index holds and adding 1
-        //then adding it to primary index list to get written in file later;
-        //and adding secondary index entry too.
-        RRN = pIndexEmployee.size() + 1;
-        PrimaryIndexRecord pir;
-        pir.RRN = stoi(Employee_ID);
-        pir.byteOffset = byteOffset;
-        pIndexEmployee.push_back(pir);
 
-        //search existing secondary indexes if the key matches the new record, if not add a new secondary index.
-        int sizeT = sIndexEmployee.size();
-        int flag =0;
-        for(int i=0;i<sizeT;i++){
-            if(Dept_ID == sIndexEmployee[i].key){
-                sIndexEmployee[i].RRNs.push_back(stoi(Employee_ID));
-                flag = 1;
-                break;
-            }
-        }
-        if(flag==0){
-            SecondaryIndexRecord sir;
-            sir.key= Dept_ID;
-            sir.RRNs.push_back(stoi(Employee_ID));
-            sIndexEmployee.push_back(sir);
-        }
 
         fEmployee<<recordSize;
     } else {
         fEmployee.seekp(to_string(recordSize).length(),ios::cur);
+    }
+
+    //seeing how many records the primary index holds and adding 1
+    //then adding it to primary index list to get written in file later;
+    //and adding secondary index entry too.
+    RRN = pIndexEmployee.size() + 1;
+    PrimaryIndexRecord pir;
+    pir.RRN = stoi(Employee_ID);
+    pir.byteOffset = byteOffset;
+    pIndexEmployee.push_back(pir);
+
+    //search existing secondary indexes if the key matches the new record, if not add a new secondary index.
+    int sizeT = sIndexEmployee.size();
+    int flag =0;
+    for(int i=0;i<sizeT;i++){
+        if(Dept_ID == sIndexEmployee[i].key){
+            sIndexEmployee[i].RRNs.push_back(stoi(Employee_ID));
+            flag = 1;
+            break;
+        }
+    }
+    if(flag==0){
+        SecondaryIndexRecord sir;
+        sir.key= Dept_ID;
+        sir.RRNs.push_back(stoi(Employee_ID));
+        sIndexEmployee.push_back(sir);
     }
 
     fEmployee<<Employee_ID<<FIELD_DELIMITER;
@@ -256,22 +258,26 @@ void Employee::writeEmployee(){
 
 }
 
-bool Employee::deleteEmployeeByRRN(int RRN){
-    //TODO: create a getEmployee by byteOffset to use indexes later.
+bool Employee::deleteEmployeeByID(int ID){
     Employee e;
-    e.getEmployeeByRRN(RRN);
+    e.getEmployeeByPIndex(ID);
     int currentRRN=1,currentRecordSize=-1,x;
     fEmployee.seekg(0,ios::beg);
     int firstDeletedRecord = stoi(readBytes(fEmployee,4));
+    int currentID=-1,currentPos;
 
-
-    //reach the required record sequentially.
-    while(currentRRN<RRN){
+    //reach the required record sequentially to get it's RRN.
+    while(currentID!=ID){
+        currentPos= fEmployee.tellg();
         fEmployee.seekp(1,ios::cur);//skip the Active or Deleted flag
         currentRecordSize = stoi(readBytes(fEmployee,4));
-        fEmployee.seekp(currentRecordSize,ios::cur);
+        currentID = stoi(readBytes(fEmployee,EMPLOYEE_ID_FIELD_SIZE));
+
+        fEmployee.seekp(currentRecordSize-EMPLOYEE_ID_FIELD_SIZE,ios::cur);
         currentRRN++;
     }
+
+    fEmployee.seekg(currentPos,ios::beg);
     char c;
     c = fEmployee.get();
     fEmployee.seekp(-1,ios::cur);
@@ -284,13 +290,13 @@ bool Employee::deleteEmployeeByRRN(int RRN){
     fEmployee.seekp(RECORD_HEADER_SIZE-1,ios::cur);
     fEmployee<<firstDeletedRecord<<FIELD_DELIMITER;
     fEmployee.seekp(0,ios::beg);
-    writeFileHeader(fEmployee,4,RRN);
+    writeFileHeader(fEmployee,4,currentRRN-1);
 
     //Delete the record from the Primary index.
     x = pIndexEmployee.size();
 
     for(int i=0;i<x;i++){
-        if(pIndexEmployee[i].RRN == RRN){
+        if(pIndexEmployee[i].RRN == ID){
             pIndexEmployee.erase(pIndexEmployee.begin()+i);
             break;
         }
@@ -306,7 +312,7 @@ bool Employee::deleteEmployeeByRRN(int RRN){
                 sIndexEmployee.erase(sIndexEmployee.begin()+i1);
             } else {
                 for(int i2=0;i2<y;i2++){
-                    if(sIndexEmployee[i1].RRNs[i2] == RRN){
+                    if(sIndexEmployee[i1].RRNs[i2] == ID){
                         sIndexEmployee[i1].RRNs.erase(sIndexEmployee[i1].RRNs.begin()+i2);
                         break;
                     }
@@ -316,5 +322,6 @@ bool Employee::deleteEmployeeByRRN(int RRN){
         }
     }
 
+    cout<<"DELETION COMPLETE OF EMPLOYEE: "<<ID<<endl;
     return true;
 };

@@ -19,7 +19,7 @@ public:
     Department();
     Department( string , string , string);
     void setRRN(int);
-    static bool deleteDepartmentByRRN(int);
+    static bool deleteDepartmentByID(int);
     void getDepartmentByRRN(int);
     void getDepartmentByPIndex(int);
     static void getDepartmentsBySIndex(string);
@@ -253,22 +253,26 @@ void Department::writeDepartment(){
 
 };
 
-bool Department::deleteDepartmentByRRN(int RRN){
-    //TODO: create a getDepartment by byteOffset to use indexes later.
+bool Department::deleteDepartmentByID(int ID){
     Department d;
-    d.getDepartmentByRRN(RRN);
+    d.getDepartmentByPIndex(ID);
     int currentRRN=1,currentRecordSize=-1,x;
     fDepartment.seekg(0,ios::beg);
     int firstDeletedRecord = stoi(readBytes(fDepartment,4));
+    int currentID=-1,currentPos;
 
-
-    //reach the required record sequentially.
-    while(currentRRN<RRN){
+    //reach the required record sequentially to get it's RRN.
+    while(currentID!=ID){
+        currentPos= fDepartment.tellg();
         fDepartment.seekp(1,ios::cur);//skip the Active or Deleted flag
         currentRecordSize = stoi(readBytes(fDepartment,4));
-        fDepartment.seekp(currentRecordSize,ios::cur);
+        currentID = stoi(readBytes(fDepartment,DEPT_ID_FIELD_SIZE));
+
+        fDepartment.seekp(currentRecordSize-DEPT_ID_FIELD_SIZE,ios::cur);
         currentRRN++;
     }
+
+    fDepartment.seekg(currentPos,ios::beg);
     char c;
     c = fDepartment.get();
     fDepartment.seekp(-1,ios::cur);
@@ -280,13 +284,13 @@ bool Department::deleteDepartmentByRRN(int RRN){
     fDepartment.seekp(RECORD_HEADER_SIZE-1,ios::cur);
     fDepartment<<firstDeletedRecord<<FIELD_DELIMITER;
     fDepartment.seekp(0,ios::beg);
-    writeFileHeader(fDepartment,4,RRN);
+    writeFileHeader(fDepartment,4,ID);
 
     //Delete the record from the Primary index.
     x = pIndexDepartment.size();
 
     for(int i=0;i<x;i++){
-        if(pIndexDepartment[i].RRN == RRN){
+        if(pIndexDepartment[i].RRN == ID){
             pIndexDepartment.erase(pIndexDepartment.begin()+i);
             break;
         }
@@ -302,7 +306,7 @@ bool Department::deleteDepartmentByRRN(int RRN){
                 sIndexDepartment.erase(sIndexDepartment.begin()+i1);
             } else {
                 for(int i2=0;i2<y;i2++){
-                    if(sIndexDepartment[i1].RRNs[i2] == RRN){
+                    if(sIndexDepartment[i1].RRNs[i2] == ID){
                         sIndexDepartment[i1].RRNs.erase(sIndexDepartment[i1].RRNs.begin()+i2);
                         break;
                     }
@@ -311,6 +315,8 @@ bool Department::deleteDepartmentByRRN(int RRN){
             break;
         }
     }
+
+    cout<<"DELETION COMPLETE OF DEPARTMENT: "<<ID<<endl;
     return true;
 };
 
