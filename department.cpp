@@ -221,7 +221,7 @@ void Department::writeDepartment(){
         //then adding it to primary index list to get written in file later;
         RRN = pIndexDepartment.size()+ 1;
         PrimaryIndexRecord pir;
-        pir.RRN = RRN;
+        pir.RRN = stoi(Dept_ID);
         pir.byteOffset = byteOffset;
         pIndexDepartment.push_back(pir);
 
@@ -230,7 +230,7 @@ void Department::writeDepartment(){
         int flag =0 ;
         for(int i=0;i<sizeT;i++){
             if(Dept_Name == sIndexDepartment[i].key){
-                sIndexDepartment[i].RRNs.push_back(RRN);
+                sIndexDepartment[i].RRNs.push_back(stoi(Dept_ID));
                 flag = 1;
                 break;
             }
@@ -238,7 +238,7 @@ void Department::writeDepartment(){
         if(flag==0){
             SecondaryIndexRecord sir;
             sir.key= Dept_Name;
-            sir.RRNs.push_back(RRN);
+            sir.RRNs.push_back(stoi(Dept_ID));
             sIndexDepartment.push_back(sir);
         }
 

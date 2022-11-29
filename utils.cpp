@@ -23,13 +23,15 @@ const char HEADER_PADDING_FLAG = ' ';
 const char FIELD_DELIMITER = '|';
 const char ACTIVE_FLAG = ' ';
 const int EMPLOYEE_RECORD_SIZE = 144;
+const int EMPLOYEE_ID_FIELD_SIZE = 13;
+const int DEPT_ID_FIELD_SIZE = 30;
 const int DEPARTMENT_RECORD_SIZE = 130;
+const int DEPT_NAME_FIELD_SIZE = 50;
 const int FILE_HEADER_SIZE = sizeof(int);//each file starts with an Avail vector Header.
 const int RECORD_HEADER_SIZE = sizeof(int)+1;//each record starts with a fixed length header consisting of Active/Delete flag and size header
-const int P_INDEX_RECOD_SIZE = 8;
-const int S_INDEX_RECOD_SIZE = 8;
-const int SL_INDEX_RECOD_SIZE = 8;
-
+const int P_INDEX_RECOD_POINTER_SIZE = 4;
+const int S_INDEX_RECOD_POINTER_SIZE = 4;
+const int SL_INDEX_RECOD_POINTER_SIZE = 4;
 //linked vector to store index records for sorting and binary searches.
 //they are read in the inititalise function, modified during data file change operation
 //and written back in file when use choose to close the program.
@@ -150,13 +152,20 @@ void writeFileHeader(fstream& f,int hSize,int header){
 //This function is used when you want to write a relative sized value in a fixed length field.
 void writeFixedField(fstream& f,int fSize,string s){
     int actualSize = s.length();
+    int diff = fSize-actualSize;
+    int writtenChars = 0;
+    //cout<<"DATA: "<<s<<endl;
 
-    while(actualSize<fSize){
+    for(int i=diff;i>0;i--){
         f.put(' ');
-        actualSize++;
+        writtenChars++;
+    }
+    for(int i=0;writtenChars!=fSize;i++){
+        f.put(s[i]);
+        writtenChars++;
     }
 
-    f<<s;
+
 }
 
 int getFileSize(fstream& f){
@@ -260,10 +269,10 @@ void initialise(){
         temp2 =0;
         while(temp2!=temp1){
             PrimaryIndexRecord pir;
-            pir.RRN = stoi(readBytes(fPIndexEmployee,4));
-            pir.byteOffset = stoi(readBytes(fPIndexEmployee,4));
+            pir.RRN = stoi(readBytes(fPIndexEmployee,EMPLOYEE_ID_FIELD_SIZE));
+            pir.byteOffset = stoi(readBytes(fPIndexEmployee,P_INDEX_RECOD_POINTER_SIZE));
             pIndexEmployee.push_back(pir);
-            temp2 += P_INDEX_RECOD_SIZE;
+            temp2 += (P_INDEX_RECOD_POINTER_SIZE+EMPLOYEE_ID_FIELD_SIZE);
         }
     }
 
@@ -274,13 +283,12 @@ void initialise(){
         temp2 =0;
         while(temp2!=temp1){
             PrimaryIndexRecord pir;
-            pir.RRN = stoi(readBytes(fPIndexDepartment,4));
-            pir.byteOffset = stoi(readBytes(fPIndexDepartment,4));
+            pir.RRN = stoi(readBytes(fPIndexDepartment,DEPT_ID_FIELD_SIZE));
+            pir.byteOffset = stoi(readBytes(fPIndexDepartment,P_INDEX_RECOD_POINTER_SIZE));
             pIndexDepartment.push_back(pir);
-            temp2+= P_INDEX_RECOD_SIZE;
+            temp2+= (P_INDEX_RECOD_POINTER_SIZE+DEPT_ID_FIELD_SIZE);
         }
     }
-
 
     //Read Secondary Index and Secondary Index list into memory.
     fSIndexEmployee.seekg(0,ios::end);
@@ -292,17 +300,17 @@ void initialise(){
         temp2 =0;
         while(temp2!=temp1){
             SecondaryIndexRecord sir;
-            sir.key = readBytes(fSIndexEmployee,4);
+            sir.key = readBytes(fSIndexEmployee,DEPT_ID_FIELD_SIZE);
             //Removes white space from the key if the datafile used padding/Fixed Length Record.
             sir.key.erase(remove(sir.key.begin(), sir.key.end(), ' '), sir.key.end());
-            int listElem  = stoi(readBytes(fSIndexEmployee,4));
+            int listElem  = stoi(readBytes(fSIndexEmployee,S_INDEX_RECOD_POINTER_SIZE));
             while(listElem!= -1){
-                fSIndexEmployeeData.seekg(listElem*SL_INDEX_RECOD_SIZE,ios::beg);
-                listElem = stoi(readBytes(fSIndexEmployeeData,4));
-                sir.RRNs.push_back(stoi(readBytes(fSIndexEmployeeData,4)));
+                fSIndexEmployeeData.seekg(listElem*(SL_INDEX_RECOD_POINTER_SIZE+EMPLOYEE_ID_FIELD_SIZE),ios::beg);
+                listElem = stoi(readBytes(fSIndexEmployeeData,SL_INDEX_RECOD_POINTER_SIZE));
+                sir.RRNs.push_back(stoi(readBytes(fSIndexEmployeeData,EMPLOYEE_ID_FIELD_SIZE)));
             };
             sIndexEmployee.push_back(sir);
-            temp2+= S_INDEX_RECOD_SIZE;
+            temp2+= (S_INDEX_RECOD_POINTER_SIZE+ DEPT_ID_FIELD_SIZE);
         }
     };
 
@@ -314,16 +322,16 @@ void initialise(){
         temp2 =0;
             while(temp2!=temp1){
             SecondaryIndexRecord sir;
-            sir.key = readBytes(fSIndexEmployee,4);
+            sir.key = readBytes(fSIndexEmployee,DEPT_NAME_FIELD_SIZE);
             sir.key.erase(remove(sir.key.begin(), sir.key.end(), ' '), sir.key.end());
-            int listElem  = stoi(readBytes(fSIndexDepartment,4));
+            int listElem  = stoi(readBytes(fSIndexDepartment,S_INDEX_RECOD_POINTER_SIZE));
             while(listElem!= -1){
-                fSIndexDepartmentData.seekg(listElem*SL_INDEX_RECOD_SIZE,ios::beg);
-                listElem = stoi(readBytes(fSIndexDepartmentData,4));
-                sir.RRNs.push_back(stoi(readBytes(fSIndexDepartmentData,4)));
+                fSIndexDepartmentData.seekg(listElem*(SL_INDEX_RECOD_POINTER_SIZE+DEPT_ID_FIELD_SIZE),ios::beg);
+                listElem = stoi(readBytes(fSIndexDepartmentData,SL_INDEX_RECOD_POINTER_SIZE));
+                sir.RRNs.push_back(stoi(readBytes(fSIndexDepartmentData,DEPT_ID_FIELD_SIZE)));
             };
             sIndexDepartment.push_back(sir);
-            temp2+= S_INDEX_RECOD_SIZE;
+            temp2+= (S_INDEX_RECOD_POINTER_SIZE+DEPT_NAME_FIELD_SIZE);
         }
     };
 
@@ -358,8 +366,8 @@ void closeFiles(){
     //fPIndexEmployee.clear();
     x = pIndexEmployee.size();
     for (int i=0;i<x; i++){
-        writeFixedField(fPIndexEmployee,P_INDEX_RECOD_SIZE/2,to_string(pIndexEmployee[i].RRN));
-        writeFixedField(fPIndexEmployee,P_INDEX_RECOD_SIZE/2,to_string(pIndexEmployee[i].byteOffset));
+        writeFixedField(fPIndexEmployee,EMPLOYEE_ID_FIELD_SIZE,to_string(pIndexEmployee[i].RRN));
+        writeFixedField(fPIndexEmployee,P_INDEX_RECOD_POINTER_SIZE,to_string(pIndexEmployee[i].byteOffset));
     }
 
     fPIndexDepartment.close();
@@ -367,8 +375,8 @@ void closeFiles(){
     sort(pIndexDepartment.begin(), pIndexDepartment.end(), &pIndexSorterAscending);
     x = pIndexDepartment.size();
     for (int i=0;i<x; i++){
-        writeFixedField(fPIndexDepartment,P_INDEX_RECOD_SIZE/2,to_string(pIndexDepartment[i].RRN));
-        writeFixedField(fPIndexDepartment,P_INDEX_RECOD_SIZE/2,to_string(pIndexDepartment[i].byteOffset));
+        writeFixedField(fPIndexDepartment,DEPT_ID_FIELD_SIZE,to_string(pIndexDepartment[i].RRN));
+        writeFixedField(fPIndexDepartment,P_INDEX_RECOD_POINTER_SIZE,to_string(pIndexDepartment[i].byteOffset));
     }
 
 
@@ -382,17 +390,17 @@ void closeFiles(){
     sort(sIndexEmployee.begin(), sIndexEmployee.end(), &sIndexSorterAscending);
     x = sIndexEmployee.size();
     for (int i1=0;i1<x; i1++){
-        writeFixedField(fSIndexEmployee,S_INDEX_RECOD_SIZE/2,sIndexEmployee[i1].key);
-        writeFixedField(fSIndexEmployee,S_INDEX_RECOD_SIZE/2,to_string(fSIndexEmployeeData.tellg()/SL_INDEX_RECOD_SIZE));
+        writeFixedField(fSIndexEmployee,DEPT_ID_FIELD_SIZE,sIndexEmployee[i1].key);
+        writeFixedField(fSIndexEmployee,S_INDEX_RECOD_POINTER_SIZE,to_string(fSIndexEmployeeData.tellg()/(SL_INDEX_RECOD_POINTER_SIZE+EMPLOYEE_ID_FIELD_SIZE)));
 
         y = sIndexEmployee[i1].RRNs.size();
         for (int i2=0;i2<y; i2++){
             if(i2==y-1){
-                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(-1));
-                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexEmployee[i1].RRNs[i2]));
+                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_POINTER_SIZE,to_string(-1));
+                writeFixedField(fSIndexEmployeeData,EMPLOYEE_ID_FIELD_SIZE,to_string(sIndexEmployee[i1].RRNs[i2]));
             }else{
-                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(fSIndexEmployeeData.tellg()/SL_INDEX_RECOD_SIZE + 1));
-                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexEmployee[i1].RRNs[i2]));
+                writeFixedField(fSIndexEmployeeData,SL_INDEX_RECOD_POINTER_SIZE,to_string(fSIndexEmployeeData.tellg()/(SL_INDEX_RECOD_POINTER_SIZE+EMPLOYEE_ID_FIELD_SIZE)+ 1));
+                writeFixedField(fSIndexEmployeeData,EMPLOYEE_ID_FIELD_SIZE,to_string(sIndexEmployee[i1].RRNs[i2]));
             }
         }
 
@@ -407,17 +415,17 @@ void closeFiles(){
     sort(sIndexDepartment.begin(), sIndexDepartment.end(), &sIndexSorterAscending);
     x = sIndexDepartment.size();
     for (int i1=0;i1<x; i1++){
-        writeFixedField(fSIndexDepartment,S_INDEX_RECOD_SIZE/2,sIndexDepartment[i1].key);
-        writeFixedField(fSIndexDepartment,S_INDEX_RECOD_SIZE/2,to_string(fSIndexDepartmentData.tellg()/SL_INDEX_RECOD_SIZE));
+        writeFixedField(fSIndexDepartment,DEPT_NAME_FIELD_SIZE,sIndexDepartment[i1].key);
+        writeFixedField(fSIndexDepartment,S_INDEX_RECOD_POINTER_SIZE,to_string(fSIndexDepartmentData.tellg()/(SL_INDEX_RECOD_POINTER_SIZE+DEPT_ID_FIELD_SIZE)));
 
         y = sIndexDepartment[i1].RRNs.size();
         for (int i2=0;i2<y; i2++){
             if(i2==y-1){
-                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(-1));
-                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexDepartment[i1].RRNs[i2]));
+                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_POINTER_SIZE,to_string(-1));
+                writeFixedField(fSIndexDepartmentData,DEPT_ID_FIELD_SIZE,to_string(sIndexDepartment[i1].RRNs[i2]));
             }else{
-                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(fSIndexDepartmentData.tellg()/SL_INDEX_RECOD_SIZE + 1));
-                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_SIZE/2,to_string(sIndexDepartment[i1].RRNs[i2]));
+                writeFixedField(fSIndexDepartmentData,SL_INDEX_RECOD_POINTER_SIZE,to_string(fSIndexDepartmentData.tellg()/(SL_INDEX_RECOD_POINTER_SIZE+DEPT_ID_FIELD_SIZE) + 1));
+                writeFixedField(fSIndexDepartmentData,DEPT_ID_FIELD_SIZE,to_string(sIndexDepartment[i1].RRNs[i2]));
             }
         }
 

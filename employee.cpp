@@ -223,7 +223,7 @@ void Employee::writeEmployee(){
         //and adding secondary index entry too.
         RRN = pIndexEmployee.size() + 1;
         PrimaryIndexRecord pir;
-        pir.RRN = RRN;
+        pir.RRN = stoi(Employee_ID);
         pir.byteOffset = byteOffset;
         pIndexEmployee.push_back(pir);
 
@@ -232,7 +232,7 @@ void Employee::writeEmployee(){
         int flag =0;
         for(int i=0;i<sizeT;i++){
             if(Dept_ID == sIndexEmployee[i].key){
-                sIndexEmployee[i].RRNs.push_back(RRN);
+                sIndexEmployee[i].RRNs.push_back(stoi(Employee_ID));
                 flag = 1;
                 break;
             }
@@ -240,7 +240,7 @@ void Employee::writeEmployee(){
         if(flag==0){
             SecondaryIndexRecord sir;
             sir.key= Dept_ID;
-            sir.RRNs.push_back(RRN);
+            sir.RRNs.push_back(stoi(Employee_ID));
             sIndexEmployee.push_back(sir);
         }
 
