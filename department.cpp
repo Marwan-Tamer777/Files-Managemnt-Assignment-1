@@ -94,6 +94,7 @@ void Department::getDepartmentByPIndex(int RRN){
     //reach the required record using the byte offset.
     fDepartment.seekg(pos,ios::beg);
 
+    if(pos==-1){cout<<"NO MATHCED DEPARTMENT"<<endl;return;}
     //get the record and place it in the object.
     char d;
     d = fDepartment.get();
@@ -113,6 +114,7 @@ void Department::getDepartmentsBySIndex(string key){
     int size = rrns.size();
     string temp;
     char d;
+    if(rrns.empty()){cout<<"NO MATHCED DEPARTMENTS"<<endl;return;}
 
     //reach the required record using the byte offset from the primary index.
     for(int i=0;i<size;i++){

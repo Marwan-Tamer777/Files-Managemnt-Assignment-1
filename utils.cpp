@@ -196,7 +196,7 @@ int binarySearch(vector<PrimaryIndexRecord> v, int RRN)
     int first = 0;
     int last = size - 1;
     int middle;
-    int position = -1;
+    int position = -1;//default state if not found.
     bool found = false;
 
     while (found == false && first <= last)
@@ -338,7 +338,7 @@ void initialise(){
 
 //Parameter function to sort the Primary indexes vector.
 bool pIndexSorterAscending(PrimaryIndexRecord const& lpir, PrimaryIndexRecord const& rpir) {
-    return lpir.byteOffset < rpir.byteOffset;
+    return lpir.RRN < rpir.RRN;
 };
 
 //Parameter function to sort the Secondary indexes vector.

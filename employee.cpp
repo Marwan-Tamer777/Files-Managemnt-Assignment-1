@@ -88,12 +88,13 @@ void Employee::getEmployeeByRRN(int RRN){
 
 };
 
-void Employee::getEmployeeByPIndex(int RRN){
+void Employee::getEmployeeByPIndex(int ID){
 
-    int pos = binarySearch(pIndexEmployee,RRN);
+    int pos = binarySearch(pIndexEmployee,ID);
     //reach the required record using the byte offset.
     fEmployee.seekg(pos,ios::beg);
 
+    if(pos==-1){cout<<"NO MATHCED EMPLOYEE"<<endl;return;}
 
     //get the record and place it in the object.
     char d;
@@ -116,6 +117,7 @@ void Employee::getEmployeesBySIndex(string key){
     string temp;
     char d;
 
+    if(rrns.empty()){cout<<"NO MATHCED EMPLOYEES"<<endl;return;}
     //reach the required record using the byte offset from the primary index.
     for(int i=0;i<size;i++){
         pos = binarySearch(pIndexEmployee,rrns[i]);
