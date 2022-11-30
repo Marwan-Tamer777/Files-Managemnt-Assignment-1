@@ -7,6 +7,7 @@
 #include "utils.cpp"
 #include "employee.cpp"
 #include "department.cpp"
+#include "QueryReader.cpp"
 
 using namespace std;
 

@@ -34,6 +34,9 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="QueryReader.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="department.cpp">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>

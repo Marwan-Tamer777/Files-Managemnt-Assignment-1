@@ -8,15 +8,12 @@ using namespace std;
 
 class Employee
 {
-private:
+public:
     char Employee_ID  [13];
     char Dept_ID [30];
     char Employee_Name [50];
     char Employee_Position [50];
     int RRN;
-
-
-public:
     Employee();
     Employee( string , string , string, string );
     void setRRN(int);
@@ -24,6 +21,7 @@ public:
     void getEmployeeByRRN(int);
     void getEmployeeByPIndex(int);
     static void getEmployeesBySIndex(string);
+    void getFirstEmployeeBySIndex(string);
     void writeEmployee();
     friend istream& operator >> (istream &str,Employee &e){
         cout<<"Enter Employee's ID, Department ID, Name, Position separated  by \"enter\""<<endl;
@@ -140,6 +138,26 @@ void Employee::getEmployeesBySIndex(string key){
 
 };
 
+//Gets the first Employee matching the Key.
+void Employee::getFirstEmployeeBySIndex(string key){
+
+    vector<int> rrns = binarySearch(sIndexEmployee,key);
+    int pos;
+    int size = rrns.size();
+    char d;
+
+    if(rrns.empty()){cout<<"NO MATHCED EMPLOYEES"<<endl;return;}
+    //reach the required record using the byte offset from the primary index.
+    pos = binarySearch(pIndexEmployee,rrns[0]);
+    fEmployee.seekg(pos,ios::beg);
+    d = fEmployee.get();
+    if(d==DELETE_FLAG){cout<<"Record is Deleted"<<endl;return;}
+    fEmployee.seekg(RECORD_HEADER_SIZE-1,ios::cur);
+    readField(fEmployee,Employee_ID,FIELD_DELIMITER);
+    readField(fEmployee,Dept_ID,FIELD_DELIMITER);
+    readField(fEmployee,Employee_Name,FIELD_DELIMITER);
+    readField(fEmployee,Employee_Position,FIELD_DELIMITER);
+};
 void Employee::writeEmployee(){
     //sets up the size of the record to be inserted in the file.
     //and checks if AvailList have any deleted files

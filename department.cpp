@@ -8,14 +8,11 @@ using namespace std;
 
 class Department
 {
-private:
+public:
     char Dept_ID  [30];
     char Dept_Name [50];
     char Dept_Manger [50];
     int RRN;
-
-
-public:
     Department();
     Department( string , string , string);
     void setRRN(int);
@@ -23,6 +20,7 @@ public:
     void getDepartmentByRRN(int);
     void getDepartmentByPIndex(int);
     static void getDepartmentsBySIndex(string);
+    void getFirstDepartmentBySIndex(string);
     void readDepartment();
     void writeDepartment();
     friend istream& operator >> (istream &str, Department &d){
@@ -127,15 +125,33 @@ void Department::getDepartmentsBySIndex(string key){
         fDepartment.seekg(RECORD_HEADER_SIZE-1,ios::cur);
 
         temp = readField(fDepartment,FIELD_DELIMITER);
-        cout<<"Employee ID: "<<temp<<endl;
-        temp = readField(fDepartment,FIELD_DELIMITER);
         cout<<"Dept ID: "<<temp<<endl;
         temp = readField(fDepartment,FIELD_DELIMITER);
-        cout<<"Employee Name: "<<temp<<endl;
+        cout<<"Dept Name: "<<temp<<endl;
         temp = readField(fDepartment,FIELD_DELIMITER);
-        cout<<"Employee Position: "<<temp<<endl;
+        cout<<"Dept Manager: "<<temp<<endl;
     }
 
+};
+
+
+//Return the first record to match the query.
+void Department::getFirstDepartmentBySIndex(string key){
+
+    vector<int> rrns = binarySearch(sIndexDepartment,key);
+    int pos;
+    int size = rrns.size();
+    char d;
+    if(rrns.empty()){cout<<"NO MATHCED DEPARTMENTS"<<endl;return;}
+
+    pos = binarySearch(pIndexDepartment,rrns[0]);
+    fDepartment.seekg(pos,ios::beg);
+    d = fDepartment.get();
+    if(d==DELETE_FLAG){cout<<"Record is Deleted"<<endl;return;}
+    fDepartment.seekg(RECORD_HEADER_SIZE-1,ios::cur);
+    readField(fDepartment,Dept_ID,FIELD_DELIMITER);
+    readField(fDepartment,Dept_Name,FIELD_DELIMITER);
+    readField(fDepartment,Dept_Manger,FIELD_DELIMITER);
 };
 
 void Department::writeDepartment(){

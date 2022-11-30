@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1669751097 source:g:\studies\files\asssignment1\main.cpp
+1669842017 source:g:\studies\files\asssignment1\main.cpp
 	<cstdlib>
 	<iostream>
 	<fstream>
@@ -9,8 +9,9 @@
 	"utils.cpp"
 	"employee.cpp"
 	"department.cpp"
+	"QueryReader.cpp"
 
-1669829125 g:\studies\files\asssignment1\utils.cpp
+1669841333 g:\studies\files\asssignment1\utils.cpp
 	<cstdlib>
 	<iostream>
 	<fstream>
@@ -19,17 +20,19 @@
 	<cstring>
 	<vector>
 
-1669829153 g:\studies\files\asssignment1\employee.cpp
+1669841995 g:\studies\files\asssignment1\employee.cpp
 	<cstdlib>
 	<iostream>
 	<fstream>
 	<string>
 	<cstring>
 
-1669828682 g:\studies\files\asssignment1\department.cpp
+1669842004 g:\studies\files\asssignment1\department.cpp
 	<cstdlib>
 	<iostream>
 	<fstream>
 	<string>
 	<cstring>
+
+1669842218 g:\studies\files\asssignment1\queryreader.cpp
 
